@@ -13,13 +13,13 @@ from os import listdir
 from pathlib import Path
 from time import sleep, localtime as _now, strftime
 
-def dir_path(path):
+def dir_path(path) -> str:
     if Path(path).exists():
         return str(path)
     else:
         raise argparse.ArgumentTypeError(f"dir: {path} is not a valid path")
 
-def check_response(func, action=""):
+def check_response(func, action="") -> 'tuple(str,bytes)':
     try:
         typ, data = func
         assert 'OK' in typ
@@ -28,30 +28,36 @@ def check_response(func, action=""):
 
     return typ, data
 
-def sanitize_string(string):
+def sanitize_string(string) -> 'str | None':
     try: # does not work for every special char, but better than nothing
         string = re.sub(r"utf-[0-9][a-z]|iso-[0-9]+-[0-9][a-z]", "", string, flags=re.IGNORECASE).strip()
         return "".join([c for c in string if c in ("@", "-", "_", ".", " ") or c.isalnum()])[:35]
     except:
         return None
 
-def main(args):
+def main(args) -> None:
     now = lambda: strftime("%H:%M:%S", _now())
-    included, excluded = args.include.split(","), args.exclude.split(",")
+    included = list(filter(len, args.include.split(",")))
+    excluded = list(filter(len, args.exclude.split(",")))
 
     bytify = lambda x: bytes(str(x), 'ascii') if type(x) != bytes else x
 
     with Connection(args.username, args.password, args.server, args.port) as imap:
-        if len(included) > 0:
+        if len(included) > 0 and not args.list_mailboxes:
             mailboxes = included
         else:
             _, _mailboxes = check_response(imap.list(), "list")
             # ('OK', [b'(\\HasNoChildren) "/" INBOX', b'(\\HasNoChildren) "/" Sent', ...])
             mailboxes = [m.decode('utf-8').split()[-1] for m in _mailboxes]
+            sleep(0.2)
+
+        print(f"{now()} - got these mailboxes: {','.join(mailboxes)}")
+        if args.list_mailboxes:
+            return None
 
         mailboxes = [mb for mb in mailboxes if mb not in excluded]
-        print(f"{now()} - will do {','.join(mailboxes)}")
-        
+        print(f"{now()} - will do: {','.join(mailboxes)}")
+
         for mailbox in mailboxes:
             _, count = check_response(imap.select(mailbox, readonly=True), "select") 
             # ('OK', [b'7'])
@@ -82,7 +88,7 @@ def main(args):
                     for msg_id in batch.split(","):
                         message = next(messages)
                         subject = sanitize_string(message['Subject']) or "no_subject"
-                        from_addr = sanitize_string(message['From'])
+                        from_addr = sanitize_string(message['From']) or "no_sender"
                         file_name = f"{path}/{int(msg_id)}_{from_addr}__{subject}.eml"
 
                         if not args.dry_run:
@@ -102,6 +108,7 @@ def main(args):
             print(f"{now()} -- done with {mailbox}")
 
     print(f"{now()} - done")
+    return None
 
 class Connection(imaplib.IMAP4_SSL):
     def __init__(self, username, password, host, port):
@@ -152,6 +159,8 @@ if __name__ == "__main__":
                         help="how many emails to fetch at once, default: 10")
     parser.add_argument("--dry-run", dest='dry_run', action='store_true', 
                         help="do not actually write anything, just print, default: false")
+    parser.add_argument("--list-mailboxes", dest='list_mailboxes', action='store_true', 
+                        help="list all available mailboxes on server and exit, default: false")
     args = parser.parse_args()
 
     if len(args.username) == 0: 
@@ -161,7 +170,7 @@ if __name__ == "__main__":
 
     if any([len(args.server) == 0, len(args.username) == 0, len(args.password) == 0]):
         parser.error("--server, --username, --password can't be empty")
-    
+
     if not args.batch:
         args.batch_size = 1
 

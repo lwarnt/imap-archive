@@ -11,8 +11,7 @@ Either set required values in `config.ini` or use the available command line opt
 
 ```bash
 ./archive_mail.py -h
-usage: archive_mail.py [-h] [-d DIR] [-s SERVER] [-p PORT] [-u USERNAME] [-pw PASSWORD] [-e EXCLUDE | -i INCLUDE] [-a ALL] [-b]
-                       [-bs BATCH_SIZE] [--dry-run]
+usage: archive_mail.py [-h] [-d DIR] [-s SERVER] [-p PORT] [-u USERNAME] [-pw PASSWORD] [-e EXCLUDE | -i INCLUDE] [-a ALL] [-b] [-bs BATCH_SIZE] [--dry-run] [--list-mailboxes]
 
 options:
   -h, --help            show this help message and exit
@@ -34,15 +33,23 @@ options:
   -bs BATCH_SIZE, --batch-size BATCH_SIZE
                         how many emails to fetch at once, default: 10
   --dry-run             do not actually write anything, just print, default: false
+  --list-mailboxes      list all available mailboxes on server and exit, default: false
 ```
 
 ### Examples
 
 ```bash
+./archive_mail.py --list-mailboxes
+14:06:55 - got the following mailboxes:
+['Archive', 'INBOX', 'Sent', 'Trash']
+```
+
+```bash
 mkdir -p /tmp/email_backup
 ./archive_mail.py -s imap.domain.com -u username@domain.com -i INBOX -d /tmp/email_backup
 Password: 
-12:25:31 - will do INBOX
+12:25:31 - got these mailboxes: INBOX
+12:25:31 - will do: INBOX
 12:25:31 -- 2213 total in INBOX
 12:25:31 --- 25 to fetch for INBOX
 12:25:32 -- done with INBOX
@@ -51,8 +58,9 @@ Password:
 
 ```bash
 ./archive_mail.py -s imap.domain.com -u username@domain.com -e Sent,Trash
-Password: 
-12:25:31 - will do INBOX,Archive
+Password:
+12:25:31 - got these mailboxes: INBOX,Archive,Sent,Trash
+12:25:31 - will do: INBOX,Archive
 12:25:31 -- 2213 total in INBOX
 12:25:31 --- 25 to fetch for INBOX
 12:25:32 -- done with INBOX
