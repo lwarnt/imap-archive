@@ -1,6 +1,6 @@
 # imap-archive
 
-Archives emails from an IMAP server and saves them as `.eml` files.
+Archives emails from an IMAP server as `.eml` files.
 
 By default, fetches from all mailboxes one at a time and only those, which don't exist locally.
 That means, on the first run it will get everything, but for subsequent runs only new items.
