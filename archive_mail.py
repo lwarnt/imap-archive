@@ -14,7 +14,7 @@ from pathlib import Path
 from time import sleep, localtime as _now, strftime
 
 def dir_path(path):
-    if Path(path).parent.exists():
+    if Path(path).exists():
         return str(path)
     else:
         raise argparse.ArgumentTypeError(f"dir: {path} is not a valid path")
@@ -29,7 +29,7 @@ def check_response(func, action=""):
     return typ, data
 
 def sanitize_string(string):
-    try: # does work for every special char, but better than nothing
+    try: # does not work for every special char, but better than nothing
         string = re.sub(r"utf-[0-9][a-z]|iso-[0-9]+-[0-9][a-z]", "", string, flags=re.IGNORECASE).strip()
         return "".join([c for c in string if c in ("@", "-", "_", ".", " ") or c.isalnum()])[:35]
     except:
@@ -55,9 +55,6 @@ def main(args):
         for mailbox in mailboxes:
             _, count = check_response(imap.select(mailbox, readonly=True), "select") 
             # ('OK', [b'7'])
-            # _, _indexes = check_response(imap.search(None, 'ALL'), "search")
-            # ('OK', [b'1 2 3 4 5 6 7']) # which is the same as below
-            # indexes = _indexes[0].split()
             indexes = range(1, int(count[0]) + 1)
             print(f"{now()} -- {len(indexes)} total in {mailbox}")
 
@@ -99,7 +96,7 @@ def main(args):
 
                     sleep(0.2)
                 except:
-                    print(f"{now()} ---- failed to get {batch}")
+                    print(f"{now()} ---- failed to do {batch}")
 
             check_response(imap.close())
             print(f"{now()} -- done with {mailbox}")
@@ -115,7 +112,6 @@ class Connection(imaplib.IMAP4_SSL):
         self.password = password
         super().__init__(host=self.host, port=self.port, ssl_context=self.context)
         self.login(self.username, self.password)
-        # self.enable('UTF8=ACCEPT')
 
 def read_config(key):
     try:
