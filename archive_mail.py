@@ -8,7 +8,6 @@ import re
 import ssl
 
 from getpass import getpass
-from glob import glob
 from os import listdir
 from pathlib import Path
 from time import sleep, localtime as _now, strftime

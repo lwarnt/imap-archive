@@ -39,12 +39,6 @@ options:
 ### Examples
 
 ```bash
-./archive_mail.py --list-mailboxes
-14:06:55 - got the following mailboxes:
-['Archive', 'INBOX', 'Sent', 'Trash']
-```
-
-```bash
 mkdir -p /tmp/email_backup
 ./archive_mail.py -s imap.domain.com -u username@domain.com -i INBOX -d /tmp/email_backup
 Password: 
@@ -76,4 +70,9 @@ Password:
 Password: 
 ...
 12:25:34 - done
+```
+
+```bash
+./archive_mail.py --list-mailboxes
+14:06:55 - got the following mailboxes: Archive,INBOX,Sent,Trash
 ```
