@@ -11,6 +11,7 @@ from getpass import getpass
 from os import listdir
 from pathlib import Path
 from time import sleep, localtime as _now, strftime
+from zipfile import ZIP_LZMA, ZipFile as zf
 
 def dir_path(path) -> str:
     if Path(path).exists():
@@ -64,8 +65,17 @@ def main(args) -> None:
             print(f"{now()} -- {len(indexes)} total in {mailbox}")
 
             path = Path(f"{args.dir}/{mailbox}").absolute().as_posix()
+            if args.zip:
+                archive_path = f"{args.dir}/mails.zip"
+                with zf(archive_path, "a") as archive:
+                    check_list = [x for x in archive.namelist() if mailbox in x] 
+                    check_list = list(map(lambda x: x.split(f"{mailbox}/")[-1], check_list))
+            else:
+                Path(path).mkdir(parents=True, exist_ok=True)
+                check_list = listdir(path)
+
             if not args.all: # fetch only, if no file for index exists
-                files = filter(re.compile(r"\d+_").match, listdir(path))
+                files = filter(re.compile(r"\d+_").match, check_list)
                 ids = list(map(lambda x: int(x.split("_")[0]), files))
                 fetch = [i for i in indexes if i not in ids]
             else:
@@ -88,20 +98,24 @@ def main(args) -> None:
                         message = next(messages)
                         subject = sanitize_string(message['Subject']) or "no_subject"
                         from_addr = sanitize_string(message['From']) or "no_sender"
-                        file_name = f"{path}/{int(msg_id)}_{from_addr}__{subject}.eml"
+                        file_name = f"{int(msg_id)}_{from_addr}__{subject}.eml"
 
                         if not args.dry_run:
-                            if not Path(file_name).parent.exists():
-                                Path(file_name).parent.mkdir(parents=True, exist_ok=True)
                             msg_content = message.as_bytes()
-                            with open(file_name, "wb") as f:
-                                f.write(msg_content)
+
+                            if args.zip:
+                                with zf(archive_path, mode="a", compression=ZIP_LZMA) as archive:
+                                    archive.writestr(f"{mailbox}/{file_name}", msg_content)
+                            else:
+                                with open(f"{path}/{file_name}", "wb") as f:
+                                    f.write(msg_content)
                         else:
                             print("--dry-run: would: ", file_name)
 
                     sleep(0.2)
                 except:
                     print(f"{now()} ---- failed to do {batch}")
+                    # raise
 
             check_response(imap.close())
             print(f"{now()} -- done with {mailbox}")
@@ -158,8 +172,10 @@ if __name__ == "__main__":
                         help="how many emails to fetch at once, default: 10")
     parser.add_argument("--dry-run", dest='dry_run', action='store_true', 
                         help="do not actually write anything, just print, default: false")
-    parser.add_argument("--list-mailboxes", dest='list_mailboxes', action='store_true', 
+    parser.add_argument("-l", "--list-mailboxes", dest='list_mailboxes', action='store_true', 
                         help="list all available mailboxes on server and exit, default: false")
+    parser.add_argument("-z", "--zip", dest='zip', action='store_true', default=read_config("zip") or False,
+                        help="zip into archive, default: false")
     args = parser.parse_args()
 
     if len(args.username) == 0: 

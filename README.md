@@ -5,13 +5,16 @@ Archives emails from an IMAP server as `.eml` files.
 By default, fetches from all mailboxes one at a time and only those, which don't exist locally.
 That means, on the first run it will get everything, but for subsequent runs only new items.
 
+> **NOTE:** Does NOT handle deleted messages well, because of indexing changes. 
+
 ## Usage
 
 Either set required values in `config.ini` or use the available command line options.
 
 ```bash
 ./archive_mail.py -h
-usage: archive_mail.py [-h] [-d DIR] [-s SERVER] [-p PORT] [-u USERNAME] [-pw PASSWORD] [-e EXCLUDE | -i INCLUDE] [-a ALL] [-b] [-bs BATCH_SIZE] [--dry-run] [--list-mailboxes]
+usage: archive_mail.py [-h] [-d DIR] [-s SERVER] [-p PORT] [-u USERNAME] [-pw PASSWORD] [-e EXCLUDE | -i INCLUDE] [-a ALL] [-b]
+                       [-bs BATCH_SIZE] [--dry-run] [-l] [-z]
 
 options:
   -h, --help            show this help message and exit
@@ -33,7 +36,8 @@ options:
   -bs BATCH_SIZE, --batch-size BATCH_SIZE
                         how many emails to fetch at once, default: 10
   --dry-run             do not actually write anything, just print, default: false
-  --list-mailboxes      list all available mailboxes on server and exit, default: false
+  -l, --list-mailboxes  list all available mailboxes on server and exit, default: false
+  -z, --zip             zip into archive, default: false
 ```
 
 ### Examples
