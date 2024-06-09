@@ -65,16 +65,18 @@ def main(args) -> None:
             print(f"{now()} -- {len(indexes)} total in {mailbox}")
 
             path = Path(f"{args.dir}/{mailbox}").absolute().as_posix()
-            if args.zip:
-                archive_path = f"{args.dir}/mails.zip"
-                with zf(archive_path, "a") as archive:
-                    check_list = [x for x in archive.namelist() if mailbox in x] 
-                    check_list = list(map(lambda x: x.split(f"{mailbox}/")[-1], check_list))
-            else:
-                Path(path).mkdir(parents=True, exist_ok=True)
-                check_list = listdir(path)
+            archive_path = f"{args.dir}/mails.zip"
 
             if not args.all: # fetch only, if no file for index exists
+                if args.zip:
+                    with zf(archive_path, "a") as archive:
+                        check_list = [x for x in archive.namelist() if mailbox in x] 
+
+                    check_list = list(map(lambda x: x.split(f"{mailbox}/")[-1], check_list))
+                else:
+                    Path(path).mkdir(parents=True, exist_ok=True)
+                    check_list = listdir(path)
+
                 files = filter(re.compile(r"\d+_").match, check_list)
                 ids = list(map(lambda x: int(x.split("_")[0]), files))
                 fetch = [i for i in indexes if i not in ids]
@@ -104,7 +106,7 @@ def main(args) -> None:
                             msg_content = message.as_bytes()
 
                             if args.zip:
-                                with zf(archive_path, mode="a", compression=ZIP_LZMA) as archive:
+                                with zf(archive_path, mode="w" if args.all else "a", compression=ZIP_LZMA) as archive:
                                     archive.writestr(f"{mailbox}/{file_name}", msg_content)
                             else:
                                 with open(f"{path}/{file_name}", "wb") as f:
@@ -164,7 +166,7 @@ if __name__ == "__main__":
                         help="exclude (case-sensitive, comma-separated) list of mailboxes, e.g. 'Trash,Junk', default:")
     mgroup.add_argument("-i", "--include", dest='include', type=str, default=read_config("include") or "",
                         help="include  (case-sensitive, comma-separated) list of mailboxes, e.g. 'INBOX,Archive', default: all")
-    parser.add_argument("-a", "--all", dest='all', type=bool, default=False, 
+    parser.add_argument("-a", "--all", dest='all', action='store_true', default=read_config("all") or False, 
                         help="fetch all again (in mailbox) and overwrite any existing files, default: false")
     parser.add_argument("-b", "--batch", dest='batch', action='store_true', default=read_config("batch") or True, 
                         help="fetch multiple emails at once, determined by -bs / --batch-size, default: true")
