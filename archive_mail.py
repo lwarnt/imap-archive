@@ -6,9 +6,10 @@ import email
 import imaplib
 import re
 import ssl
+import sys
 
 from getpass import getpass
-from os import listdir
+from os import listdir, remove
 from pathlib import Path
 from time import sleep, localtime as _now, strftime
 from zipfile import ZIP_LZMA, ZipFile as zf
@@ -39,6 +40,9 @@ def main(args) -> None:
     now = lambda: strftime("%H:%M:%S", _now())
     included = list(filter(len, args.include.split(",")))
     excluded = list(filter(len, args.exclude.split(",")))
+    archive_path = f"{args.dir}/mails.zip"
+    if Path(archive_path).exists() and args.zip:
+        remove(archive_path)
 
     bytify = lambda x: bytes(str(x), 'ascii') if type(x) != bytes else x
 
@@ -65,7 +69,7 @@ def main(args) -> None:
             print(f"{now()} -- {len(indexes)} total in {mailbox}")
 
             path = Path(f"{args.dir}/{mailbox}").absolute().as_posix()
-            archive_path = f"{args.dir}/mails.zip"
+            
 
             if not args.all: # fetch only, if no file for index exists
                 if args.zip:
@@ -106,7 +110,7 @@ def main(args) -> None:
                             msg_content = message.as_bytes()
 
                             if args.zip:
-                                with zf(archive_path, mode="w" if args.all else "a", compression=ZIP_LZMA) as archive:
+                                with zf(archive_path, mode="a", compression=ZIP_LZMA) as archive:
                                     archive.writestr(f"{mailbox}/{file_name}", msg_content)
                             else:
                                 with open(f"{path}/{file_name}", "wb") as f:
@@ -115,7 +119,12 @@ def main(args) -> None:
                             print("--dry-run: would: ", file_name)
 
                     sleep(0.2)
-                except:
+
+                except KeyboardInterrupt:
+                    print(f"{now()} - Interrupted.")
+                    sys.exit(130)
+
+                except Exception:
                     print(f"{now()} ---- failed to do {batch}")
                     # raise
 
@@ -191,4 +200,4 @@ if __name__ == "__main__":
     if not args.batch:
         args.batch_size = 1
 
-    main(args)
+    sys.exit(main(args))
