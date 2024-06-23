@@ -41,7 +41,7 @@ def main(args) -> None:
     included = list(filter(len, args.include.split(",")))
     excluded = list(filter(len, args.exclude.split(",")))
     archive_path = f"{args.dir}/mails.zip"
-    if Path(archive_path).exists() and args.zip:
+    if Path(archive_path).exists() and args.zip and args.all:
         remove(archive_path)
 
     bytify = lambda x: bytes(str(x), 'ascii') if type(x) != bytes else x
