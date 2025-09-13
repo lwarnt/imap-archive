@@ -13,27 +13,25 @@ Either set required values in `config.ini` or use the available command line opt
 
 ```bash
 ./archive_mail.py -h
-usage: archive_mail.py [-h] [-d DIR] [-s SERVER] [-p PORT] [-u USERNAME] [-pw PASSWORD] [-e EXCLUDE | -i INCLUDE] [-a ALL] [-b]
-                       [-bs BATCH_SIZE] [--dry-run] [-l] [-z]
+usage: archive_mail.py [-h] [-d DIR] [-s SERVER] [-p PORT] [-u USERNAME] [-pw PASSWORD] [-e EXCLUDE | -i INCLUDE] [-a] [-b] [-bs BATCH_SIZE] [--dry-run] [-l] [-z]
 
 options:
   -h, --help            show this help message and exit
-  -d DIR, --destination-dir DIR
+  -d, --destination-dir DIR
                         directory where mailboxes will be saved to, default: '.'
-  -s SERVER, --server SERVER
-                        (required) IMAP server (host), default:
-  -p PORT, --port PORT  IMAP server port, default: 993
-  -u USERNAME, --username USERNAME
+  -s, --server SERVER   (required) IMAP server (host), default:
+  -p, --port PORT       IMAP server port, default: 993
+  -u, --username USERNAME
                         (required) username for IMAP login, default:
-  -pw PASSWORD, --password PASSWORD
+  -pw, --password PASSWORD
                         (required) password for IMAP login, default:
-  -e EXCLUDE, --exclude EXCLUDE
+  -e, --exclude EXCLUDE
                         exclude (case-sensitive, comma-separated) list of mailboxes, e.g. 'Trash,Junk', default:
-  -i INCLUDE, --include INCLUDE
+  -i, --include INCLUDE
                         include (case-sensitive, comma-separated) list of mailboxes, e.g. 'INBOX,Archive', default: all
-  -a ALL, --all ALL     fetch all again (in mailbox) and overwrite any existing files, default: false
+  -a, --all             fetch all again (in mailbox) and overwrite any existing files, default: false
   -b, --batch           fetch multiple emails at once, determined by -bs / --batch-size, default: true
-  -bs BATCH_SIZE, --batch-size BATCH_SIZE
+  -bs, --batch-size BATCH_SIZE
                         how many emails to fetch at once, default: 10
   --dry-run             do not actually write anything, just print, default: false
   -l, --list-mailboxes  list all available mailboxes on server and exit, default: false
@@ -78,5 +76,5 @@ Password:
 
 ```bash
 ./archive_mail.py --list-mailboxes
-14:06:55 - got the following mailboxes: Archive,INBOX,Sent,Trash
+14:06:55 - got these mailboxes: Archive,INBOX,Sent,Trash
 ```
